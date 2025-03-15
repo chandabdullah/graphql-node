@@ -10,6 +10,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 
+let events = [];
+
 app.use(
     '/api',
     graphqlHTTP({
@@ -22,12 +24,19 @@ app.use(
                 date: String
             }
 
+            input EventInput {
+                title: String!
+                description: String
+                price: Float
+                date: String
+            }
+
             type RootQuery {
                 events: [Event!]!
             }
             
             type RootMutation {
-                createEvent(name: String): String
+                createEvent(eventInput: EventInput): Event
             }
 
             schema {
@@ -37,11 +46,18 @@ app.use(
         `),
         rootValue: {
             events: () => {
-                return ['Event 1', 'Event 2', 'Event 3'];
+                return events;
             },
             createEvent: (args) => {
-                const name = args.name;
-                return `Event name '${name}' has been created!`;
+                const event = {
+                    _id: Math.random().toString(36).substr(2, 9),
+                    title: args.eventInput.title,
+                    description: args.eventInput.description,
+                    price: +args.eventInput.price,
+                    date: new Date().toISOString(),
+                };
+                events.push(event);
+                return event;
             }
         },
         graphiql: true,
